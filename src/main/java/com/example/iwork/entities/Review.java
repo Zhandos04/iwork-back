@@ -96,6 +96,12 @@ public class Review {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "admin_comment", columnDefinition = "TEXT")
+    private String adminComment;
+
+    @Column(name = "has_admin_comment")
+    private Boolean hasAdminComment;
+
     @Column
     private String date;
 }

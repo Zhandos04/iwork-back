@@ -18,4 +18,5 @@ public interface UserService {
     UserDetails getCurrentUser();
     void resentCode(String email);
     void deleteUnverifiedUsers();
+    boolean isAdmin();
 }

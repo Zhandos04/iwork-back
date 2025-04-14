@@ -96,4 +96,16 @@ public class GlobalExceptionHandler {
         Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    public ResponseEntity<Response<?>> handleFilterNotFoundException(ReviewNotFoundException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Response<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
 }

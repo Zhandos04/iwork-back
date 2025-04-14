@@ -77,6 +77,15 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public boolean isAdmin() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        return authentication != null &&
+                authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+    }
+
     @Transactional
     @Override
     public void update(User user){
