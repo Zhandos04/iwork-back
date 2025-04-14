@@ -16,8 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -32,7 +30,7 @@ public class ProfileServiceImpl implements ProfileService {
     public ProfileResponse getProfile() {
         User user = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
-        return convertToProfileResponse(user);
+        return modelMapper.map(user, ProfileResponse.class);
     }
 
     @Override
@@ -47,21 +45,7 @@ public class ProfileServiceImpl implements ProfileService {
         updatedUser.setPhone(profileDTO.getPhone());
         updatedUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(updatedUser);
-        return convertToProfileResponse(updatedUser);
-    }
-
-    private ProfileResponse convertToProfileResponse(User user) {
-        ProfileResponse profileResponse = modelMapper.map(user, ProfileResponse.class);
-        if (user.getCreatedAt() != null) {
-            DateTimeFormatter formatter = DateTimeFormatter
-                    .ofPattern("LLLL yyyy", new Locale("ru"));
-
-            String formattedDate = formatter.format(user.getCreatedAt());
-
-            profileResponse.setWithUsSince(formattedDate.substring(0, 1).toUpperCase() +
-                    formattedDate.substring(1));
-        }
-        return profileResponse;
+        return modelMapper.map(updatedUser, ProfileResponse.class);
     }
 
     @Override

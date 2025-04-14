@@ -18,7 +18,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -63,6 +65,11 @@ public class UserServiceImpl implements UserService {
             user.setEmailVerified(false);
             user.setCreatedAt(LocalDateTime.now());
             user.setRole(UserRole.ROLE_USER);
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("LLLL yyyy", new Locale("ru"));
+            String formattedDate = formatter.format(user.getCreatedAt());
+            user.setWithUsSince(formattedDate.substring(0, 1).toUpperCase() +
+                    formattedDate.substring(1));
             userRepository.save(user);
             String code = generateCode();
             saveUserConfirmationCode(user.getId(), code);

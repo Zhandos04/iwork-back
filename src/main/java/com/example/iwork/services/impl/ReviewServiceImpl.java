@@ -2,6 +2,7 @@ package com.example.iwork.services.impl;
 
 import com.example.iwork.dto.requests.CreateReviewDTO;
 import com.example.iwork.dto.responses.ReviewResponseDTO;
+import com.example.iwork.entities.ApprovalStatus;
 import com.example.iwork.entities.Company;
 import com.example.iwork.entities.Review;
 import com.example.iwork.entities.User;
@@ -15,6 +16,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -34,8 +39,21 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
         Review review = modelMapper.map(createReviewDTO, Review.class);
         review.setCompany(company);
+        review.setCreatedAt(LocalDateTime.now());
         review.setUser(user);
+        review.setAuthor(user.getFullName());
+        review.setApprovalStatus(ApprovalStatus.PENDING);
+        DateTimeFormatter formatter = DateTimeFormatter
+                .ofPattern("LLLL yyyy", new Locale("ru"));
+        String formattedDate = formatter.format(review.getCreatedAt());
+        review.setDate(formattedDate.substring(0, 1).toUpperCase() +
+                formattedDate.substring(1));
         reviewRepository.save(review);
-        return modelMapper.map(review, ReviewResponseDTO.class);
+        ReviewResponseDTO reviewResponseDTO =  modelMapper.map(review, ReviewResponseDTO.class);
+        reviewResponseDTO.setCompanyName(company.getName());
+        reviewResponseDTO.setHasVerification(review.getContractDocumentUrl() != null &&
+                !review.getContractDocumentUrl().isEmpty());
+
+        return reviewResponseDTO;
     }
 }

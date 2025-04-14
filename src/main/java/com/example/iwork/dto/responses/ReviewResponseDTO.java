@@ -6,8 +6,6 @@ import lombok.Data;
 public class ReviewResponseDTO {
     private Long id;
 
-    private Long companyId;
-
     private String companyName;
 
     private String title;
@@ -55,4 +53,6 @@ public class ReviewResponseDTO {
     private Boolean hasVerification;
 
     private String contractDocumentUrl;
+
+    private String date;
 }

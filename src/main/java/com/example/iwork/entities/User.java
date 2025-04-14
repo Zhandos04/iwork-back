@@ -34,6 +34,7 @@ public class User implements UserDetails {
     private Boolean emailVerified;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String withUsSince;
     public String getUsername1() {
         return this.username;
     }

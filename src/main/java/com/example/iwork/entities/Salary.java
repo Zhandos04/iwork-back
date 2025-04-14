@@ -23,7 +23,7 @@ public class Salary {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Column
+    @Column(nullable = false)
     private String position;
 
     @Column
@@ -33,28 +33,16 @@ public class Salary {
     private String employmentStatus; // current, former
 
     @Column(name = "employment_type")
-    private String employmentType; // full-time, part-time, contract, etc.
+    private String employmentType; // full-time, part-time, contract, internship, freelance
 
     @Column(nullable = false)
-    private Double amount;
-
-    @Column
-    private Double min;
-
-    @Column
-    private Double max;
-
-    @Column
-    private Double median;
+    private Double salary;
 
     @Column
     private String currency;
 
     @Column(name = "pay_period")
     private String payPeriod; // monthly, yearly
-
-    @Column(name = "additional_pay")
-    private Double additionalPay;
 
     @Column
     private String bonuses;
@@ -63,7 +51,7 @@ public class Salary {
     private String stockOptions;
 
     @Column(name = "experience_level")
-    private String experienceLevel;
+    private String experience;
 
     @Column
     private String location;
@@ -83,5 +71,6 @@ public class Salary {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-}
 
+    @Column String date;
+}
