@@ -3,6 +3,7 @@ package com.example.iwork.exceptions;
 import com.example.iwork.dto.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
+import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -82,5 +83,17 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Response<?>> handleInvalidTokenException(InvalidTokenException ex) {
         Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(FileUploadException.class)
+    public ResponseEntity<Response<?>> handleFileUploadException(FileUploadException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.BAD_REQUEST.value());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(CompanyNotFoundException.class)
+    public ResponseEntity<Response<?>> handleFilterNotFoundException(CompanyNotFoundException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }
