@@ -30,5 +30,9 @@ public class ProfileResponse {
 
     @Schema(description = "Роль пользователя")
     private String role;
+
+    private Long reviewsCount;
+
+    private Long salaryCount;
 }
 

@@ -4,6 +4,8 @@ import com.example.iwork.dto.requests.PasswordDTO;
 import com.example.iwork.dto.requests.ProfileDTO;
 import com.example.iwork.dto.responses.ProfileResponse;
 import com.example.iwork.entities.User;
+import com.example.iwork.repositories.ReviewRepository;
+import com.example.iwork.repositories.SalaryRepository;
 import com.example.iwork.repositories.UserRepository;
 import com.example.iwork.services.ProfileService;
 import com.example.iwork.services.UserService;
@@ -25,12 +27,18 @@ public class ProfileServiceImpl implements ProfileService {
     private final ModelMapper modelMapper;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final SalaryRepository salaryRepository;
+    private final ReviewRepository reviewRepository;
 
     @Override
     public ProfileResponse getProfile() {
         User user = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
-        return modelMapper.map(user, ProfileResponse.class);
+        ProfileResponse profileResponse = modelMapper.map(user, ProfileResponse.class);
+        profileResponse.setReviewsCount(reviewRepository.countByUser(user));
+        profileResponse.setSalaryCount(salaryRepository.countByUser(user));
+
+        return profileResponse;
     }
 
     @Override
@@ -45,7 +53,12 @@ public class ProfileServiceImpl implements ProfileService {
         updatedUser.setPhone(profileDTO.getPhone());
         updatedUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(updatedUser);
-        return modelMapper.map(updatedUser, ProfileResponse.class);
+
+        ProfileResponse profileResponse = modelMapper.map(updatedUser, ProfileResponse.class);
+        profileResponse.setReviewsCount(reviewRepository.countByUser(updatedUser));
+        profileResponse.setSalaryCount(salaryRepository.countByUser(updatedUser));
+
+        return profileResponse;
     }
 
     @Override
