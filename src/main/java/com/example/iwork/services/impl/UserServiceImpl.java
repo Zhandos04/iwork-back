@@ -76,13 +76,6 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
     }
 
-    @Transactional
-    @Override
-    public void updateProfile(User user){
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
-    }
-
     @Override
     public void saveUserConfirmationCode(Long id, String code) {
         User user = userRepository.getUserById(id);

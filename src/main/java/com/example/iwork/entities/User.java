@@ -24,15 +24,13 @@ public class User implements UserDetails {
     private String email;
     private String confirmationCode;
     private String password;
-    private String firstName;
-    private String lastName;
+    private String fullName;
     private String jobTitle;
     private String company;
     private String location;
     private String phone;
     @Enumerated(EnumType.STRING)
     private UserRole role;
-    private Boolean enabled;
     private Boolean emailVerified;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

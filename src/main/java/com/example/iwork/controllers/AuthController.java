@@ -36,10 +36,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -160,6 +158,15 @@ public class AuthController {
 
         Map<String, String> tokens = jwtService.generateTokens(loginDTO.getUsername(), user.getRole().name());
         AuthDTO authDTO = modelMapper.map(user, AuthDTO.class);
+        if (user.getCreatedAt() != null) {
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("LLLL yyyy", new Locale("ru"));
+
+            String formattedDate = formatter.format(user.getCreatedAt());
+
+            authDTO.setWithUsSince(formattedDate.substring(0, 1).toUpperCase() +
+                    formattedDate.substring(1));
+        }
         authDTO.setAccessToken(tokens.get("accessToken"));
         authDTO.setRefreshToken(tokens.get("refreshToken"));
 
@@ -193,7 +200,8 @@ public class AuthController {
     @PostMapping("/refresh-token")
     @Operation(summary = "Refresh Access Token", description = "Refreshes the access token using a valid refresh token.",
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Access token refreshed successfully"),
+                    @ApiResponse(responseCode = "200", description = "Access token refreshed successfully",
+                            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class))),
                     @ApiResponse(responseCode = "403", description = "Invalid or expired refresh token"),
                     @ApiResponse(responseCode = "401", description = "Invalid refresh token")
             },

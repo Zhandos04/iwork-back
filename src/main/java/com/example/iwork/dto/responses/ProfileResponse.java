@@ -1,19 +1,11 @@
 package com.example.iwork.dto.responses;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Getter
-@Setter
-@Schema(description = "DTO с данными после авторизации")
-public class AuthDTO {
-
-    @Schema(description = "JWT-токен доступа", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    private String accessToken;
-
-    @Schema(description = "JWT-токен для обновления", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-    private String refreshToken;
+@Data
+@Schema(description = "DTO с информацией о профиле пользователя")
+public class ProfileResponse {
 
     @Schema(description = "ФИО", example = "Иван Иванов")
     private String fullName;
@@ -39,3 +31,4 @@ public class AuthDTO {
     @Schema(description = "Роль пользователя")
     private String role;
 }
+

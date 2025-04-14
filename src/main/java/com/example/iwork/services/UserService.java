@@ -11,7 +11,6 @@ public interface UserService {
     UserDetails loadUserByUsername(String username);
     void registerNewUser(UserDTO userDTO) throws UserAlreadyExistsException;
     void update(User user);
-    void updateProfile(User user);
     void saveUserConfirmationCode(Long id, String code);
     void updatePassword(User user);
     Optional<User> getUserByEmail(String email);
