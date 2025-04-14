@@ -108,4 +108,10 @@ public class GlobalExceptionHandler {
         Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(SalaryNotFoundException.class)
+    public ResponseEntity<Response<?>> handleSalaryNotFoundException(SalaryNotFoundException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 }

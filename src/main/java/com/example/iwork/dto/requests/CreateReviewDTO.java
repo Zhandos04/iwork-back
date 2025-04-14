@@ -8,27 +8,27 @@ import lombok.Data;
 @Schema(description = "Данные для создания или обновления отзыва")
 public class CreateReviewDTO {
     @NotNull(message = "ID компании обязателен")
-    @Schema(description = "Идентификатор компании", example = "1", required = true)
+    @Schema(description = "Идентификатор компании", example = "1")
     private Long companyId;
 
     @NotBlank(message = "Должность обязательна")
     @Size(max = 100, message = "Должность не должна превышать 100 символов")
-    @Schema(description = "Должность пользователя в компании", example = "Разработчик ПО", maxLength = 100, required = true)
+    @Schema(description = "Должность пользователя в компании", example = "Разработчик ПО", maxLength = 100)
     private String position;
 
     @NotBlank(message = "Статус занятости обязателен")
-    @Schema(description = "Статус занятости", example = "current", allowableValues = {"current", "former"}, required = true)
+    @Schema(description = "Статус занятости", example = "current", allowableValues = {"current", "former"})
     private String employmentStatus; // current, former
 
     @NotBlank(message = "Тип занятости обязателен")
-    @Schema(description = "Тип занятости", example = "full-time", allowableValues = {"full-time", "part-time", "contract", "intern", "other"}, required = true)
+    @Schema(description = "Тип занятости", example = "full-time", allowableValues = {"full-time", "part-time", "contract", "intern", "other"})
     private String employmentType; // full-time, part-time, contract, etc.
 
     // Рейтинги
     @NotNull(message = "Общая оценка обязательна")
     @Min(value = 1, message = "Оценка должна быть не менее 1")
     @Max(value = 5, message = "Оценка должна быть не более 5")
-    @Schema(description = "Общая оценка компании", example = "4.5", minimum = "1", maximum = "5", required = true)
+    @Schema(description = "Общая оценка компании", example = "4.5", minimum = "1", maximum = "5")
     private Double rating;
 
     @Min(value = 1, message = "Оценка должна быть не менее 1")
@@ -58,22 +58,22 @@ public class CreateReviewDTO {
 
     @NotBlank(message = "Заголовок отзыва обязателен")
     @Size(max = 200, message = "Заголовок не должен превышать 200 символов")
-    @Schema(description = "Заголовок отзыва", example = "Отличное место для начала карьеры", maxLength = 200, required = true)
+    @Schema(description = "Заголовок отзыва", example = "Отличное место для начала карьеры", maxLength = 200)
     private String title;
 
     @NotBlank(message = "Тело отзыва обязателен")
     @Size(max = 5000, message = "Тело не должен превышать 5000 символов")
-    @Schema(description = "Основной текст отзыва", example = "Я работал в этой компании 2 года...", maxLength = 5000, required = true)
+    @Schema(description = "Основной текст отзыва", example = "Я работал в этой компании 2 года...", maxLength = 5000)
     private String body;
 
     @NotBlank(message = "Укажите плюсы работы в компании")
     @Size(max = 5000, message = "Текст плюсов не должен превышать 5000 символов")
-    @Schema(description = "Плюсы работы в компании", example = "Хороший коллектив, интересные проекты...", maxLength = 5000, required = true)
+    @Schema(description = "Плюсы работы в компании", example = "Хороший коллектив, интересные проекты...", maxLength = 5000)
     private String pros;
 
     @NotBlank(message = "Укажите минусы работы в компании")
     @Size(max = 5000, message = "Текст минусов не должен превышать 5000 символов")
-    @Schema(description = "Минусы работы в компании", example = "Высокая нагрузка, частые переработки...", maxLength = 5000, required = true)
+    @Schema(description = "Минусы работы в компании", example = "Высокая нагрузка, частые переработки...", maxLength = 5000)
     private String cons;
 
     @Size(max = 5000, message = "Текст советов не должен превышать 5000 символов")
@@ -87,6 +87,6 @@ public class CreateReviewDTO {
     private Boolean anonymous;
 
     @AssertTrue(message = "Необходимо подтвердить достоверность информации")
-    @Schema(description = "Подтверждение достоверности информации", example = "true", required = true)
+    @Schema(description = "Подтверждение достоверности информации", example = "true")
     private Boolean confirmTruthful;
 }
