@@ -1,6 +1,6 @@
 package com.example.iwork.config;
 
-import by.project.turamyzba.jwt.JwtFilter;
+import com.example.iwork.jwt.JwtFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,18 +33,7 @@ public class SecurityConfiguration {
             "/webjars/**",
             "/swagger-ui.html",
             "/auth/**",
-            "/actuator/**",
-            "/announcement/all",
-            "/announcement/detail/*",
-            "/announcement/great-deals",
-            "/announcement/filter-with-search-by-area",
-            "/announcement/all-for-map",
-            "/announcement/get-survey-answers-of-group-members/*",
-            "/announcement/get-survey-answers-of-residents/*",
-            "/survey/get-names-for-link/*",
-            "/survey/submit-from-link",
-            "/survey/check-email",
-            "/address/**",
+            "/actuator/**"
     };
 
     @Bean

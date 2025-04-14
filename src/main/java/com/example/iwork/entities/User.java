@@ -1,10 +1,10 @@
 package com.example.iwork.entities;
 
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
@@ -30,11 +30,15 @@ public class User implements UserDetails {
     private String company;
     private String location;
     private String phone;
+    @Enumerated(EnumType.STRING)
     private UserRole role;
     private Boolean enabled;
     private Boolean emailVerified;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    public String getUsername1() {
+        return this.username;
+    }
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -53,10 +57,10 @@ public class User implements UserDetails {
     }
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        return Collections.singleton(new SimpleGrantedAuthority(role.name()));
     }
     @Override
     public String getUsername() {
-        return username;
+        return this.getUsername1();
     }
 }

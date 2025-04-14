@@ -12,7 +12,6 @@ import com.example.iwork.exceptions.IncorrectCodeException;
 import com.example.iwork.exceptions.InvalidTokenException;
 import com.example.iwork.exceptions.UserAlreadyExistsException;
 import com.example.iwork.jwt.JwtService;
-import com.example.iwork.repositories.UserRepository;
 import com.example.iwork.services.TokenBlacklistService;
 import com.example.iwork.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -51,7 +51,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final CustomAuthenticationProvider authenticationProvider;
     private final TokenBlacklistService tokenBlacklistService;
-    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
     @PostMapping("/signup")
     @Operation(
@@ -92,7 +92,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     public ResponseEntity<Response<?>> verifyEmail(@RequestBody CodeDTO codeDTO) {
-        Optional<User> userOptional = userRepository.findByEmail(codeDTO.getEmail());
+        Optional<User> userOptional = userService.getUserByEmail(codeDTO.getEmail());
 
         if (userOptional.isEmpty()) {
             throw new UsernameNotFoundException("Пользователь не найден");
@@ -104,10 +104,11 @@ public class AuthController {
         }
 
         user.setEmailVerified(true);
-        userRepository.save(user);
+        userService.update(user);
         Response<String> response = new Response<>(null, "Пользователь успешно зарегистрирован!", null, HttpStatus.CREATED.value());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
 
     @PostMapping("/resendCode")
     @Operation(
@@ -140,23 +141,27 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Internal server error occurred", content = @Content)
     })
     public ResponseEntity<Response<?>> login(@RequestBody LoginDTO loginDTO) {
-        Optional<User> userOptional = userRepository.findByEmail(loginDTO.getEmail());
+        Optional<User> userOptional = userService.getUserByUsername(loginDTO.getUsername());
 
         if (userOptional.isEmpty()) {
             throw new BadCredentialsException("Такой пользователь не существует");
         }
 
+        User user = userOptional.get();
+
+
         authenticationProvider.authenticate(
-                new UsernamePasswordAuthenticationToken(userOptional.get().getEmail(), loginDTO.getPassword())
+                new UsernamePasswordAuthenticationToken(user.getUsername1(), loginDTO.getPassword())
         );
 
-        if (!userOptional.get().getEmailVerified()) {
+        if (!user.getEmailVerified()) {
             throw new AccessDeniedException("Это пользователь еще не верифицирован!");
         }
 
-        Map<String, String> tokens = jwtService.generateTokens(loginDTO.getEmail());
-        AuthDTO authDTO = new AuthDTO();
+        Map<String, String> tokens = jwtService.generateTokens(loginDTO.getUsername(), user.getRole().name());
+        AuthDTO authDTO = modelMapper.map(user, AuthDTO.class);
         authDTO.setAccessToken(tokens.get("accessToken"));
+        authDTO.setRefreshToken(tokens.get("refreshToken"));
 
         Response<AuthDTO> response = new Response<>(authDTO, "Успешный вход", null, HttpStatus.OK.value());
         return ResponseEntity.ok(response);
@@ -185,8 +190,7 @@ public class AuthController {
         throw new InvalidTokenException("Невалидный токен!");
     }
 
-
-        @PostMapping("/refresh-token")
+    @PostMapping("/refresh-token")
     @Operation(summary = "Refresh Access Token", description = "Refreshes the access token using a valid refresh token.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Access token refreshed successfully"),
@@ -195,26 +199,29 @@ public class AuthController {
             },
             security = @SecurityRequirement(name = "bearerToken"))
 
-    public ResponseEntity<?> refreshAccessToken(HttpServletRequest request) {
+    public ResponseEntity<Response<?>> refreshAccessToken(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
         if (headerAuth != null && headerAuth.startsWith("Bearer ")) {
             String refreshToken = headerAuth.substring(7);
             try {
-                if (jwtService.validateRefreshToken(refreshToken)) {
+                if (jwtService.validateRefreshToken(refreshToken)) { // Проверка валидности рефреш токена
                     String userName = jwtService.extractUsername(refreshToken);
+                    // Проверка, что пользователь существует и активен
                     UserDetails userDetails = userService.loadUserByUsername(userName);
+                    User user = userService.getUserByUsername(userName).get();
                     if (userDetails != null && !jwtService.isTokenExpired(refreshToken)) {
-                        String newAccessToken = jwtService.generateTokens(userName).get("accessToken");
+                        String newAccessToken = jwtService.generateTokens(userName, user.getRole().name()).get("accessToken");
                         Map<String, String> tokens = new HashMap<>();
                         tokens.put("accessToken", newAccessToken);
                         tokens.put("refreshToken", refreshToken); // Отправляем тот же рефреш токен обратно
-                        return ResponseEntity.ok(tokens);
+                        Response<Map<String, String>> response = new Response<>(tokens, "Токен обновлен", null, HttpStatus.OK.value());
+                        return ResponseEntity.ok(response);
                     }
                 }
             } catch (Exception e) {
                 throw new BadCredentialsException("Invalid refresh token");
             }
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid or expired refresh token");
+        throw new InvalidTokenException("Invalid or expired refresh token");
     }
 }

@@ -8,6 +8,11 @@ import lombok.Data;
 @Data
 @Schema(description = "DTO для регистрации и обновления пользователя")
 public class UserDTO {
+    @Schema(description = "Имя пользователя (от 3 до 20 символов, только буквы, цифры, подчеркивания и точки)", example = "john_doe99")
+    @Pattern(
+            regexp = "^(?=.{3,20}$)(?![_.])(?!.*[_.]{2})[a-zA-Z][a-zA-Z0-9._]+(?<![_.])$",
+            message = "Username должен начинаться с буквы, содержать от 3 до 20 символов, включать только буквы, цифры, точки и подчёркивания, не начинаться и не заканчиваться на . или _, и не содержать подряд идущих . или _."
+    )
     private String username;
     @Schema(description = "Email пользователя", example = "example@example.com")
     @Email(message = "Неверный формат email")
