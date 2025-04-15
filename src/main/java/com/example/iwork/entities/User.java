@@ -29,7 +29,14 @@ public class User implements UserDetails {
     @JoinColumn(name = "job_id")
     private Job job;
     private String company;
-    private String location;
+    // Связь с локацией
+    @ManyToOne
+    @JoinColumn(name = "location_id")
+    private Location location;
+
+    // Оставляем строковое поле для удобства при выдаче респонса
+    @Column(name = "location_string")
+    private String locationString;
     private String phone;
     @Enumerated(EnumType.STRING)
     private UserRole role;

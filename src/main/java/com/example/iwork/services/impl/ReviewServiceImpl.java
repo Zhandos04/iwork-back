@@ -198,6 +198,7 @@ public class ReviewServiceImpl implements ReviewService {
         User currentUser = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
+
         // Проверяем права на редактирование отзыва
         if (!existingReview.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("У вас нет прав на редактирование этого отзыва");
@@ -225,6 +226,13 @@ public class ReviewServiceImpl implements ReviewService {
                     .orElseThrow(() -> new CompanyNotFoundException("Компания не найдена"));
             existingReview.setCompany(company);
         }
+
+        if (!existingReview.getJob().getId().equals(updateReviewDTO.getJobId())) {
+            Job job = jobRepository.findById(updateReviewDTO.getJobId())
+                    .orElseThrow(() -> new JobNotFoundException("Должность с ID " + updateReviewDTO.getJobId() + " не найдена"));
+            existingReview.setJob(job); // Устанавливаем должность
+        }
+
 
         // Обновляем поля отзыва
         existingReview.setTitle(updateReviewDTO.getTitle());

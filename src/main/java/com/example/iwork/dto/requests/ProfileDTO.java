@@ -24,6 +24,10 @@ public class ProfileDTO {
     @Schema(description = "Компания пользователя", example = "ООО Рога и Копыта")
     private String company;
 
+    @Schema(description = "Идентификатор локации", example = "1")
+    private Long locationId;
+
+    // Оставляем для совместимости
     @Schema(description = "Местоположение пользователя", example = "Москва, Россия")
     private String location;
 

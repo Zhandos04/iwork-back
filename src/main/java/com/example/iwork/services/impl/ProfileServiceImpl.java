@@ -4,12 +4,11 @@ import com.example.iwork.dto.requests.PasswordDTO;
 import com.example.iwork.dto.requests.ProfileDTO;
 import com.example.iwork.dto.responses.ProfileResponse;
 import com.example.iwork.entities.Job;
+import com.example.iwork.entities.Location;
 import com.example.iwork.entities.User;
 import com.example.iwork.exceptions.JobNotFoundException;
-import com.example.iwork.repositories.JobRepository;
-import com.example.iwork.repositories.ReviewRepository;
-import com.example.iwork.repositories.SalaryRepository;
-import com.example.iwork.repositories.UserRepository;
+import com.example.iwork.repositories.*;
+import com.example.iwork.services.LocationService;
 import com.example.iwork.services.ProfileService;
 import com.example.iwork.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +32,8 @@ public class ProfileServiceImpl implements ProfileService {
     private final SalaryRepository salaryRepository;
     private final ReviewRepository reviewRepository;
     private final JobRepository jobRepository;
+    private final LocationService locationService;
+    private final LocationRepository locationRepository;
 
     @Override
     public ProfileResponse getProfile() {
@@ -42,6 +43,12 @@ public class ProfileServiceImpl implements ProfileService {
 
         if (user.getJob() != null) {
             profileResponse.setJobTitle(user.getJob().getTitle());
+        }
+
+        if (user.getLocation() != null) {
+            profileResponse.setLocation(user.getLocation().getLocationValue());
+        } else if (user.getLocationString() != null) {
+            profileResponse.setLocation(user.getLocationString());
         }
 
         profileResponse.setReviewsCount(reviewRepository.countByUser(user));
@@ -63,7 +70,22 @@ public class ProfileServiceImpl implements ProfileService {
                             "Должность с ID " + profileDTO.getJobId() + " не найдена"));
             updatedUser.setJob(job);
         }
-        updatedUser.setLocation(profileDTO.getLocation());
+        if (profileDTO.getLocationId() != null) {
+            // Получаем локацию по ID
+            Location location = locationRepository.findById(profileDTO.getLocationId())
+                    .orElseThrow(() -> new RuntimeException("Локация не найдена с ID: " + profileDTO.getLocationId()));
+            updatedUser.setLocation(location);
+
+            // Сохраняем строковое представление для удобства
+            updatedUser.setLocationString(location.getLocationValue());
+        } else if (profileDTO.getLocation() != null && !profileDTO.getLocation().trim().isEmpty()) {
+            // Если передана строка локации, создаем или находим существующую запись
+            Location location = locationService.getOrCreateLocation(profileDTO.getLocation());
+            updatedUser.setLocation(location);
+
+            // Сохраняем строковое представление для удобства
+            updatedUser.setLocationString(profileDTO.getLocation());
+        }
         updatedUser.setPhone(profileDTO.getPhone());
         updatedUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(updatedUser);
@@ -73,6 +95,13 @@ public class ProfileServiceImpl implements ProfileService {
         if (updatedUser.getJob() != null) {
             profileResponse.setJobTitle(updatedUser.getJob().getTitle());
         }
+
+        if (updatedUser.getLocation() != null) {
+            profileResponse.setLocation(updatedUser.getLocation().getLocationValue());
+        } else if (updatedUser.getLocationString() != null) {
+            profileResponse.setLocation(updatedUser.getLocationString());
+        }
+
         profileResponse.setReviewsCount(reviewRepository.countByUser(updatedUser));
         profileResponse.setSalaryCount(salaryRepository.countByUser(updatedUser));
 

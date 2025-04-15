@@ -9,7 +9,9 @@ import com.example.iwork.exceptions.JobNotFoundException;
 import com.example.iwork.exceptions.SalaryNotFoundException;
 import com.example.iwork.repositories.CompanyRepository;
 import com.example.iwork.repositories.JobRepository;
+import com.example.iwork.repositories.LocationRepository;
 import com.example.iwork.repositories.SalaryRepository;
+import com.example.iwork.services.LocationService;
 import com.example.iwork.services.SalaryService;
 import com.example.iwork.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,8 @@ public class SalaryServiceImpl implements SalaryService {
     private final ModelMapper modelMapper;
     private final S3Service s3Service;
     private final JobRepository jobRepository;
+    private final LocationService locationService;
+    private final LocationRepository locationRepository;
 
     private String validateAndUploadContractFile(MultipartFile file) throws FileUploadException {
         if (file == null || file.isEmpty()) {
@@ -89,6 +93,25 @@ public class SalaryServiceImpl implements SalaryService {
         salary.setCompany(company);
         salary.setUser(user);
         salary.setJob(job); // Устанавливаем должность
+
+        // Устанавливаем локацию (если передан locationId)
+        if (createSalaryDTO.getLocationId() != null) {
+            // Получаем локацию по ID
+            Location location = locationRepository.findById(createSalaryDTO.getLocationId())
+                    .orElseThrow(() -> new RuntimeException("Локация не найдена с ID: " + createSalaryDTO.getLocationId()));
+            salary.setLocation(location);
+
+            // Сохраняем строковое представление для удобства
+            salary.setLocationString(location.getLocationValue());
+        } else if (createSalaryDTO.getLocation() != null && !createSalaryDTO.getLocation().trim().isEmpty()) {
+            // Если передана строка локации, создаем или находим существующую запись
+            Location location = locationService.getOrCreateLocation(createSalaryDTO.getLocation());
+            salary.setLocation(location);
+
+            // Сохраняем строковое представление для удобства
+            salary.setLocationString(createSalaryDTO.getLocation());
+        }
+
         salary.setApprovalStatus(ApprovalStatus.PENDING);
         salary.setCreatedAt(LocalDateTime.now());
 
@@ -184,6 +207,7 @@ public class SalaryServiceImpl implements SalaryService {
         User currentUser = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
+
         // Проверяем права на редактирование
         if (!existingSalary.getUser().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("У вас нет прав на редактирование этой записи о зарплате");
@@ -211,6 +235,11 @@ public class SalaryServiceImpl implements SalaryService {
                     .orElseThrow(() -> new CompanyNotFoundException("Компания не найдена"));
             existingSalary.setCompany(company);
         }
+        if (!existingSalary.getJob().getId().equals(updateSalaryDTO.getJobId())) {
+            Job job = jobRepository.findById(updateSalaryDTO.getJobId())
+                    .orElseThrow(() -> new JobNotFoundException("Должность с ID " + updateSalaryDTO.getJobId() + " не найдена"));
+            existingSalary.setJob(job); // Устанавливаем должность
+        }
 
         // Обновляем поля записи о зарплате
         existingSalary.setPosition(updateSalaryDTO.getPosition());
@@ -223,7 +252,23 @@ public class SalaryServiceImpl implements SalaryService {
         existingSalary.setBonuses(updateSalaryDTO.getBonuses());
         existingSalary.setStockOptions(updateSalaryDTO.getStockOptions());
         existingSalary.setExperience(updateSalaryDTO.getExperience());
-        existingSalary.setLocation(updateSalaryDTO.getLocation());
+        // Обновляем локацию (если передан locationId)
+        if (updateSalaryDTO.getLocationId() != null) {
+            // Получаем локацию по ID
+            Location location = locationRepository.findById(updateSalaryDTO.getLocationId())
+                    .orElseThrow(() -> new RuntimeException("Локация не найдена с ID: " + updateSalaryDTO.getLocationId()));
+            existingSalary.setLocation(location);
+
+            // Сохраняем строковое представление для удобства
+            existingSalary.setLocationString(location.getLocationValue());
+        } else if (updateSalaryDTO.getLocation() != null && !updateSalaryDTO.getLocation().trim().isEmpty()) {
+            // Если передана строка локации, создаем или находим существующую запись
+            Location location = locationService.getOrCreateLocation(updateSalaryDTO.getLocation());
+            existingSalary.setLocation(location);
+
+            // Сохраняем строковое представление для удобства
+            existingSalary.setLocationString(updateSalaryDTO.getLocation());
+        }
         existingSalary.setAnonymous(updateSalaryDTO.getAnonymous());
 
         // При редактировании запись снова должна быть проверена

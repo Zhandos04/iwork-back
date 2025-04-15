@@ -15,6 +15,9 @@ public class CreateSalaryDTO {
     @Schema(description = "Идентификатор должности из справочника", example = "42")
     private Long jobId;
 
+    @Schema(description = "Идентификатор локации", example = "1")
+    private Long locationId;
+
     @NotBlank(message = "Должность обязательна")
     @Size(max = 100, message = "Должность не должна превышать 100 символов")
     @Schema(description = "Должность пользователя в компании", example = "Разработчик ПО", maxLength = 100)
