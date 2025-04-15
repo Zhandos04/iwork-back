@@ -142,7 +142,7 @@ public class AuthController {
         Optional<User> userOptional = userService.getUserByUsername(loginDTO.getUsername());
 
         if (userOptional.isEmpty()) {
-            throw new BadCredentialsException("Такой пользователь не существует");
+            throw new UsernameNotFoundException("Такой пользователь не существует");
         }
 
         User user = userOptional.get();

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "yearly_taxes")
 @Getter
@@ -20,12 +22,15 @@ public class YearlyTax {
     @Column(nullable = false)
     private Integer year;
 
-    @Column(nullable = false)
+    @Column(name = "tax_amount", nullable = false)
     private Double amount;
 
     @Column(name = "formatted_amount")
     private String formattedAmount;
 
-    @Column
-    private String source;
+    @Column(name = "data_source")
+    private String dataSource; // e.g., "kgd.gov.kz"
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

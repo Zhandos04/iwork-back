@@ -3,6 +3,8 @@ package com.example.iwork.repositories;
 import com.example.iwork.entities.ApprovalStatus;
 import com.example.iwork.entities.Review;
 import com.example.iwork.entities.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -41,4 +43,9 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     List<Review> findByCompanyIdAndApprovalStatus(Long companyId, ApprovalStatus approvalStatus);
 
     List<Review> findByApprovalStatus(ApprovalStatus approvalStatus);
+
+    Page<Review> findByCompanyIdAndApprovalStatus(Long companyId, ApprovalStatus approvalStatus, Pageable pageable);
+
+    // Получение отзывов по компании с фильтрацией по рейтингу и статусу
+    Page<Review> findByCompanyIdAndRatingAndApprovalStatus(Long companyId, Double rating, ApprovalStatus approvalStatus, Pageable pageable);
 }
