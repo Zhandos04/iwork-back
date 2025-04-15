@@ -23,6 +23,11 @@ public class Review {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "job_id")
+    private Job job;
+
+
     @Column(nullable = false)
     private String title;
 

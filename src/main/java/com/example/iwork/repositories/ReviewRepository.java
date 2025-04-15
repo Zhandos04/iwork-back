@@ -39,4 +39,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
      * @return список отзывов
      */
     List<Review> findByCompanyIdAndApprovalStatus(Long companyId, ApprovalStatus approvalStatus);
+
+    List<Review> findByApprovalStatus(ApprovalStatus approvalStatus);
 }

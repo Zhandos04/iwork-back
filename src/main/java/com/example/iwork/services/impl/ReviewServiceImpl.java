@@ -1,14 +1,14 @@
 package com.example.iwork.services.impl;
 
 import com.example.iwork.dto.requests.CreateReviewDTO;
+import com.example.iwork.dto.requests.UpdateReviewStatusDTO;
 import com.example.iwork.dto.responses.ReviewResponseDTO;
-import com.example.iwork.entities.ApprovalStatus;
-import com.example.iwork.entities.Company;
-import com.example.iwork.entities.Review;
-import com.example.iwork.entities.User;
+import com.example.iwork.entities.*;
 import com.example.iwork.exceptions.CompanyNotFoundException;
+import com.example.iwork.exceptions.JobNotFoundException;
 import com.example.iwork.exceptions.ReviewNotFoundException;
 import com.example.iwork.repositories.CompanyRepository;
+import com.example.iwork.repositories.JobRepository;
 import com.example.iwork.repositories.ReviewRepository;
 import com.example.iwork.services.ReviewService;
 import com.example.iwork.services.UserService;
@@ -37,6 +37,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final CompanyRepository companyRepository;
     private final UserService userService;
     private final S3Service s3Service;
+    private final JobRepository jobRepository;
 
     private String validateAndUploadContractFile(MultipartFile file) throws FileUploadException {
         if (file == null || file.isEmpty()) {
@@ -72,6 +73,9 @@ public class ReviewServiceImpl implements ReviewService {
         User user = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
+        Job job = jobRepository.findById(createReviewDTO.getJobId())
+                .orElseThrow(() -> new JobNotFoundException("Должность с ID " + createReviewDTO.getJobId() + " не найдена"));
+
         // Создаем объект отзыва
         Review review = modelMapper.map(createReviewDTO, Review.class);
         if (contractFileUrl != null) {
@@ -80,6 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setCompany(company);
         review.setCreatedAt(LocalDateTime.now());
         review.setUser(user);
+        review.setJob(job); // Устанавливаем должность
 
         // Устанавливаем автора в зависимости от настройки анонимности
         if (review.getAnonymous() == null || !review.getAnonymous()) {
@@ -265,5 +270,68 @@ public class ReviewServiceImpl implements ReviewService {
                 !updatedReview.getContractDocumentUrl().isEmpty());
 
         return response;
+    }
+
+    // Дополнительные методы для существующей имплементации ReviewServiceImpl
+
+    @Override
+    public List<ReviewResponseDTO> getAllReviews(String status) {
+        // Проверяем права администратора
+        if (!userService.isAdmin()) {
+            throw new AccessDeniedException("Доступ только для администраторов");
+        }
+
+        List<Review> reviews;
+
+        // Фильтрация по статусу, если указан
+        if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("Все")) {
+            ApprovalStatus approvalStatus = mapStatusToApprovalStatus(status);
+            reviews = reviewRepository.findByApprovalStatus(approvalStatus);
+        } else {
+            reviews = reviewRepository.findAll();
+        }
+
+        // Преобразуем список в DTO
+        return reviews.stream()
+                .map(this::convertToReviewResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public ReviewResponseDTO updateReviewStatus(Long id, UpdateReviewStatusDTO updateStatusDTO) {
+        // Проверяем права администратора
+        if (!userService.isAdmin()) {
+            throw new AccessDeniedException("Доступ только для администраторов");
+        }
+
+        // Находим отзыв
+        Review review = reviewRepository.findById(id)
+                .orElseThrow(() -> new ReviewNotFoundException("Отзыв не найден с ID: " + id));
+
+        // Обновляем статус
+        ApprovalStatus newStatus;
+        try {
+            newStatus = ApprovalStatus.valueOf(updateStatusDTO.getStatus());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Некорректный статус: " + updateStatusDTO.getStatus());
+        }
+
+        review.setApprovalStatus(newStatus);
+
+        // Добавляем комментарий администратора, если он предоставлен
+        if (updateStatusDTO.getAdminComment() != null && !updateStatusDTO.getAdminComment().trim().isEmpty()) {
+            review.setAdminComment(updateStatusDTO.getAdminComment());
+            review.setHasAdminComment(true);
+        }
+
+        // Обновляем время изменения
+        review.setUpdatedAt(LocalDateTime.now());
+
+        // Сохраняем обновленный отзыв
+        Review updatedReview = reviewRepository.save(review);
+
+        // Преобразуем в DTO для ответа
+        return convertToReviewResponseDTO(updatedReview);
     }
 }

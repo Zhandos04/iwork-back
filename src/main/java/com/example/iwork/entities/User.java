@@ -25,7 +25,9 @@ public class User implements UserDetails {
     private String confirmationCode;
     private String password;
     private String fullName;
-    private String jobTitle;
+    @ManyToOne
+    @JoinColumn(name = "job_id")
+    private Job job;
     private String company;
     private String location;
     private String phone;

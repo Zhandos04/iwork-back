@@ -2,6 +2,7 @@ package com.example.iwork.dto.requests;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
@@ -16,8 +17,9 @@ public class ProfileDTO {
     )
     private String fullName;
 
-    @Schema(description = "Должность пользователя", example = "Старший разработчик")
-    private String jobTitle;
+    @Schema(description = "Идентификатор должности из справочника", example = "42")
+    @NotNull(message = "Идентификатор должности обязателен")
+    private Long jobId;
 
     @Schema(description = "Компания пользователя", example = "ООО Рога и Копыта")
     private String company;

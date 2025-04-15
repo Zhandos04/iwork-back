@@ -23,6 +23,10 @@ public class Salary {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "job_id")
+    private Job job;
+
     @Column(nullable = false)
     private String position;
 
@@ -72,5 +76,12 @@ public class Salary {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Column String date;
+    @Column(name = "admin_comment", columnDefinition = "TEXT")
+    private String adminComment;
+
+    @Column(name = "has_admin_comment")
+    private Boolean hasAdminComment;
+
+    @Column
+    private String date;
 }

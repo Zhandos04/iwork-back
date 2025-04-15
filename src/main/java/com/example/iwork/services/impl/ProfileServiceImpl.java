@@ -3,7 +3,10 @@ package com.example.iwork.services.impl;
 import com.example.iwork.dto.requests.PasswordDTO;
 import com.example.iwork.dto.requests.ProfileDTO;
 import com.example.iwork.dto.responses.ProfileResponse;
+import com.example.iwork.entities.Job;
 import com.example.iwork.entities.User;
+import com.example.iwork.exceptions.JobNotFoundException;
+import com.example.iwork.repositories.JobRepository;
 import com.example.iwork.repositories.ReviewRepository;
 import com.example.iwork.repositories.SalaryRepository;
 import com.example.iwork.repositories.UserRepository;
@@ -29,12 +32,18 @@ public class ProfileServiceImpl implements ProfileService {
     private final PasswordEncoder passwordEncoder;
     private final SalaryRepository salaryRepository;
     private final ReviewRepository reviewRepository;
+    private final JobRepository jobRepository;
 
     @Override
     public ProfileResponse getProfile() {
         User user = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
         ProfileResponse profileResponse = modelMapper.map(user, ProfileResponse.class);
+
+        if (user.getJob() != null) {
+            profileResponse.setJobTitle(user.getJob().getTitle());
+        }
+
         profileResponse.setReviewsCount(reviewRepository.countByUser(user));
         profileResponse.setSalaryCount(salaryRepository.countByUser(user));
 
@@ -48,13 +57,22 @@ public class ProfileServiceImpl implements ProfileService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
         updatedUser.setCompany(profileDTO.getCompany());
         updatedUser.setFullName(profileDTO.getFullName());
-        updatedUser.setJobTitle(profileDTO.getJobTitle());
+        if (profileDTO.getJobId() != null) {
+            Job job = jobRepository.findById(profileDTO.getJobId())
+                    .orElseThrow(() -> new JobNotFoundException(
+                            "Должность с ID " + profileDTO.getJobId() + " не найдена"));
+            updatedUser.setJob(job);
+        }
         updatedUser.setLocation(profileDTO.getLocation());
         updatedUser.setPhone(profileDTO.getPhone());
         updatedUser.setUpdatedAt(LocalDateTime.now());
         userRepository.save(updatedUser);
 
         ProfileResponse profileResponse = modelMapper.map(updatedUser, ProfileResponse.class);
+
+        if (updatedUser.getJob() != null) {
+            profileResponse.setJobTitle(updatedUser.getJob().getTitle());
+        }
         profileResponse.setReviewsCount(reviewRepository.countByUser(updatedUser));
         profileResponse.setSalaryCount(salaryRepository.countByUser(updatedUser));
 

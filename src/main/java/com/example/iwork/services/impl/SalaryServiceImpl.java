@@ -1,14 +1,14 @@
 package com.example.iwork.services.impl;
 
 import com.example.iwork.dto.requests.CreateSalaryDTO;
+import com.example.iwork.dto.requests.UpdateSalaryStatusDTO;
 import com.example.iwork.dto.responses.SalaryResponseDTO;
-import com.example.iwork.entities.ApprovalStatus;
-import com.example.iwork.entities.Company;
-import com.example.iwork.entities.Salary;
-import com.example.iwork.entities.User;
+import com.example.iwork.entities.*;
 import com.example.iwork.exceptions.CompanyNotFoundException;
+import com.example.iwork.exceptions.JobNotFoundException;
 import com.example.iwork.exceptions.SalaryNotFoundException;
 import com.example.iwork.repositories.CompanyRepository;
+import com.example.iwork.repositories.JobRepository;
 import com.example.iwork.repositories.SalaryRepository;
 import com.example.iwork.services.SalaryService;
 import com.example.iwork.services.UserService;
@@ -37,6 +37,7 @@ public class SalaryServiceImpl implements SalaryService {
     private final UserService userService;
     private final ModelMapper modelMapper;
     private final S3Service s3Service;
+    private final JobRepository jobRepository;
 
     private String validateAndUploadContractFile(MultipartFile file) throws FileUploadException {
         if (file == null || file.isEmpty()) {
@@ -77,6 +78,9 @@ public class SalaryServiceImpl implements SalaryService {
         User user = userService.getUserByUsername(userService.getCurrentUser().getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
 
+        Job job = jobRepository.findById(createSalaryDTO.getJobId())
+                .orElseThrow(() -> new JobNotFoundException("Должность с ID " + createSalaryDTO.getJobId() + " не найдена"));
+
         // Создаем объект зарплаты
         Salary salary = modelMapper.map(createSalaryDTO, Salary.class);
         if (contractFileUrl != null) {
@@ -84,6 +88,7 @@ public class SalaryServiceImpl implements SalaryService {
         }
         salary.setCompany(company);
         salary.setUser(user);
+        salary.setJob(job); // Устанавливаем должность
         salary.setApprovalStatus(ApprovalStatus.PENDING);
         salary.setCreatedAt(LocalDateTime.now());
 
@@ -296,5 +301,68 @@ public class SalaryServiceImpl implements SalaryService {
             case "RUB" -> "₽";
             default -> "";
         };
+    }
+
+    // Дополнительные методы для существующей имплементации SalaryServiceImpl
+
+    @Override
+    public List<SalaryResponseDTO> getAllSalaries(String status) {
+        // Проверяем права администратора
+        if (!userService.isAdmin()) {
+            throw new AccessDeniedException("Доступ только для администраторов");
+        }
+
+        List<Salary> salaries;
+
+        // Фильтрация по статусу, если указан
+        if (status != null && !status.isEmpty() && !status.equalsIgnoreCase("Все")) {
+            ApprovalStatus approvalStatus = mapStatusToApprovalStatus(status);
+            salaries = salaryRepository.findByApprovalStatus(approvalStatus);
+        } else {
+            salaries = salaryRepository.findAll();
+        }
+
+        // Преобразуем список в DTO
+        return salaries.stream()
+                .map(this::convertToSalaryResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public SalaryResponseDTO updateSalaryStatus(Long id, UpdateSalaryStatusDTO updateStatusDTO) {
+        // Проверяем права администратора
+        if (!userService.isAdmin()) {
+            throw new AccessDeniedException("Доступ только для администраторов");
+        }
+
+        // Находим запись о зарплате
+        Salary salary = salaryRepository.findById(id)
+                .orElseThrow(() -> new SalaryNotFoundException("Запись о зарплате не найдена с ID: " + id));
+
+        // Обновляем статус
+        ApprovalStatus newStatus;
+        try {
+            newStatus = ApprovalStatus.valueOf(updateStatusDTO.getStatus());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Некорректный статус: " + updateStatusDTO.getStatus());
+        }
+
+        salary.setApprovalStatus(newStatus);
+
+        // Добавляем комментарий администратора, если он предоставлен
+        if (updateStatusDTO.getAdminComment() != null && !updateStatusDTO.getAdminComment().trim().isEmpty()) {
+            salary.setAdminComment(updateStatusDTO.getAdminComment());
+            salary.setHasAdminComment(true);
+        }
+
+        // Обновляем время изменения
+        salary.setUpdatedAt(LocalDateTime.now());
+
+        // Сохраняем обновленную запись
+        Salary updatedSalary = salaryRepository.save(salary);
+
+        // Преобразуем в DTO для ответа
+        return convertToSalaryResponseDTO(updatedSalary);
     }
 }
