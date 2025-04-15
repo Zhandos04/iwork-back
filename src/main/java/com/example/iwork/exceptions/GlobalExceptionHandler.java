@@ -120,4 +120,10 @@ public class GlobalExceptionHandler {
         Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(LocationNotFoundException.class)
+    public ResponseEntity<Response<?>> handleLocationNotFoundException(LocationNotFoundException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 }

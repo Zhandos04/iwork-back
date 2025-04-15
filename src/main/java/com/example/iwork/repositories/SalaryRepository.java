@@ -4,6 +4,8 @@ import com.example.iwork.entities.ApprovalStatus;
 import com.example.iwork.entities.Salary;
 import com.example.iwork.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,4 +21,7 @@ public interface SalaryRepository extends JpaRepository<Salary, Long> {
 
     List<Salary> findByApprovalStatus(ApprovalStatus approvalStatus);
 
+    @Query("SELECT s FROM Salary s WHERE s.job.id = :jobId AND s.location.id = :locationId " +
+            "AND s.approvalStatus = 'APPROVED'")
+    List<Salary> findByJobIdAndLocationId(@Param("jobId") Long jobId, @Param("locationId") Long locationId);
 }
