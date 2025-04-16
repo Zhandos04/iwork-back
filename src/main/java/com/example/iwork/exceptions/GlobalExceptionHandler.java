@@ -126,4 +126,10 @@ public class GlobalExceptionHandler {
         Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(GeminiApiException.class)
+    public ResponseEntity<Response<?>> handleGeminiApiException(GeminiApiException ex) {
+        Response<?> response = new Response<>(null, null, ex.getMessage(), HttpStatus.FORBIDDEN.value());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
 }

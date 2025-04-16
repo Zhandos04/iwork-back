@@ -109,4 +109,7 @@ public class Review {
 
     @Column
     private String date;
+
+    @Column(name = "ai_analysis", columnDefinition = "TEXT")
+    private String aiAnalysis;
 }

@@ -94,4 +94,7 @@ public class ReviewResponseDTO {
 
     @Schema(description = "Комментарий администратора", example = "Отзыв был проверен и подтвержден.")
     private String adminComment;
+
+    @Schema(description = "Анализ отзыва от AI")
+    private String aiAnalysis;
 }

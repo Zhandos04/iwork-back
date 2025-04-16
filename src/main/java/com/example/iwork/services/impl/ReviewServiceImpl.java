@@ -10,6 +10,7 @@ import com.example.iwork.exceptions.ReviewNotFoundException;
 import com.example.iwork.repositories.CompanyRepository;
 import com.example.iwork.repositories.JobRepository;
 import com.example.iwork.repositories.ReviewRepository;
+import com.example.iwork.services.GeminiService;
 import com.example.iwork.services.ReviewService;
 import com.example.iwork.services.UserService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserService userService;
     private final S3Service s3Service;
     private final JobRepository jobRepository;
+    private final GeminiService geminiService;
 
     private String validateAndUploadContractFile(MultipartFile file) throws FileUploadException {
         if (file == null || file.isEmpty()) {
@@ -76,6 +78,8 @@ public class ReviewServiceImpl implements ReviewService {
         Job job = jobRepository.findById(createReviewDTO.getJobId())
                 .orElseThrow(() -> new JobNotFoundException("Должность с ID " + createReviewDTO.getJobId() + " не найдена"));
 
+        String aiAnalysis = geminiService.analyzeReview(createReviewDTO);
+
         // Создаем объект отзыва
         Review review = modelMapper.map(createReviewDTO, Review.class);
         if (contractFileUrl != null) {
@@ -85,6 +89,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setCreatedAt(LocalDateTime.now());
         review.setUser(user);
         review.setJob(job); // Устанавливаем должность
+        review.setAiAnalysis(aiAnalysis);
 
         // Устанавливаем автора в зависимости от настройки анонимности
         if (review.getAnonymous() == null || !review.getAnonymous()) {
@@ -233,6 +238,9 @@ public class ReviewServiceImpl implements ReviewService {
             existingReview.setJob(job); // Устанавливаем должность
         }
 
+        String aiAnalysis = geminiService.analyzeReview(updateReviewDTO);
+
+        existingReview.setAiAnalysis(aiAnalysis);
 
         // Обновляем поля отзыва
         existingReview.setTitle(updateReviewDTO.getTitle());

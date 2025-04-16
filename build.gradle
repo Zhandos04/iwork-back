@@ -40,6 +40,15 @@ dependencies {
     implementation "software.amazon.awssdk:s3"
     implementation "software.amazon.awssdk:auth"
     implementation "software.amazon.awssdk:regions"
+// Заменить эти зависимости в блоке dependencies в файле build.gradle
+// Для Google AI (Gemini)
+    implementation 'com.google.cloud:google-cloud-aiplatform:3.50.0'
+    implementation 'com.google.api.grpc:proto-google-cloud-aiplatform-v1:3.50.0'
+
+// Для HTTP клиента (необходим для прямых API вызовов)
+    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'
 }
 
 tasks.named('test') {
